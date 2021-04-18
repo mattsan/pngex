@@ -5,19 +5,6 @@ defmodule Pngex do
 
   alias Pngex.Zip
 
-  @color_types %{
-    gray: 1,
-    rgb: 2,
-    indexed: 3,
-    gray_and_alpha: 4,
-    rgba: 6
-  }
-
-  @color_depths %{
-    depth8: 8,
-    depth16: 16
-  }
-
   @scanline_filter_none 0
 
   defstruct type: :rgb,
@@ -94,6 +81,23 @@ defmodule Pngex do
   defguardp is_color_type(type) when type in [:gray, :rgb, :indexed, :gray_and_alpha, :rgba]
   defguardp is_bit_depth(depth) when depth in [:depth8, :depth16]
   defguardp is_pos_int32(value) when is_integer(value) and value > 0 and value < 0x1_00_00_00_00
+
+  @doc false
+  @spec color_type_to_value(color_type()) :: 0 | 2 | 3 | 4 | 6
+  def color_type_to_value(type) when is_color_type(type) do
+    case type do
+      :gray -> 0
+      :rgb -> 2
+      :indexed -> 3
+      :gray_and_alpha -> 4
+      :rgba -> 6
+    end
+  end
+
+  @doc false
+  @spec bit_depth_to_value(bit_depth()) :: 8 | 16
+  def bit_depth_to_value(:depth8), do: 8
+  def bit_depth_to_value(:depth16), do: 16
 
   @doc """
   Creates a new Pngex structure.
@@ -210,19 +214,19 @@ defmodule Pngex do
     header = <<
       pngex.width::32,
       pngex.height::32,
-      @color_depths[pngex.depth],
-      @color_types[pngex.type],
+      bit_depth_to_value(pngex.depth),
+      color_type_to_value(pngex.type),
       @compression_method,
       @filter_method,
       @interlace_method
     >>
 
-    rows = generate_rows(pngex, data)
+    raster = Pngex.Raster.generate(pngex, data)
 
     [
       @magic_number,
       build_chunk("IHDR", header),
-      build_chunk("IDAT", Zip.compress(rows)),
+      build_chunk("IDAT", Zip.compress(raster)),
       build_chunk("IEND", "")
     ]
   end
@@ -234,37 +238,6 @@ defmodule Pngex do
        do: is_valid_palette(rest)
 
   defp is_valid_palette(_), do: false
-
-  defp generate_rows(%Pngex{} = pngex, data) when is_list(data) do
-    data
-    |> flatten()
-    |> Enum.chunk_every(pngex.width * 3)
-    |> Enum.map(&[pngex.scanline_filter | &1])
-  end
-
-  defp generate_rows(%Pngex{} = pngex, data) when is_binary(data) do
-    row_size = pngex.width * @color_depths[pngex.depth] * 3
-
-    Stream.unfold(data, fn
-      <<row::size(row_size), rest::binary>> ->
-        {<<pngex.scanline_filter, row::size(row_size)>>, rest}
-
-      <<row>> ->
-        {<<pngex.scanline_filter, row>>, <<>>}
-
-      <<>> ->
-        nil
-    end)
-    |> Enum.to_list()
-  end
-
-  defp flatten([{r, g, b} | rest]) do
-    [r, g, b | flatten(rest)]
-  end
-
-  defp flatten(list) do
-    list
-  end
 
   defp build_chunk(type, data) do
     length = :erlang.iolist_size(data)
