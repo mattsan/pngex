@@ -28,7 +28,10 @@ defmodule Pngex.MixProject do
   defp docs do
     [
       extras: ["README.md"],
-      main: "readme"
+      main: "readme",
+      groups_for_functions: [
+        Guards: &(&1[:guard] == true)
+      ]
     ]
   end
 end
