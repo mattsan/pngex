@@ -1,4 +1,6 @@
 defmodule Pngex.Zip do
+  @moduledoc false
+
   @spec compress(iodata()) :: iolist()
   def compress(data) do
     zip = :zlib.open()

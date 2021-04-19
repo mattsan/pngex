@@ -78,7 +78,8 @@ defmodule Pngex do
           scanline_filter: scanline_filter()
         }
 
-  defguardp is_color_type(type) when type in [:gray, :rgb, :indexed, :gray_and_alpha, :rgba]
+  @doc false
+  defguard is_color_type(type) when type in [:gray, :rgb, :indexed, :gray_and_alpha, :rgba]
   defguardp is_bit_depth(depth) when depth in [:depth8, :depth16]
   defguardp is_pos_int32(value) when is_integer(value) and value > 0 and value < 0x1_00_00_00_00
 

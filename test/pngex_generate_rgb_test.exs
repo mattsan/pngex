@@ -1,6 +1,5 @@
 defmodule PngexGenerateRGBTest do
   use ExUnit.Case
-  doctest Pngex
 
   describe "generate/2 for RGB-8" do
     setup do
