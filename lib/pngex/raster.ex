@@ -59,6 +59,28 @@ defmodule Pngex.Raster do
     |> Enum.to_list()
   end
 
+  defp list_to_pixels([{_r, _g, _b, _a} | _] = data, %Pngex{type: :rgba, depth: depth}) do
+    bit_depth = bit_depth_to_value(depth)
+
+    for {r, g, b, a} <- data do
+      <<r::size(bit_depth), g::size(bit_depth), b::size(bit_depth), a::size(bit_depth)>>
+    end
+  end
+
+  defp list_to_pixels(data, %Pngex{type: :rgba, depth: depth}) when is_list(data) do
+    bit_depth = bit_depth_to_value(depth)
+
+    data
+    |> Stream.unfold(fn
+      [] ->
+        nil
+
+      [r, g, b, a | rest] ->
+        {<<r::size(bit_depth), g::size(bit_depth), b::size(bit_depth), a::size(bit_depth)>>, rest}
+    end)
+    |> Enum.to_list()
+  end
+
   defp list_to_pixels(data, %Pngex{type: :gray, depth: depth}) when is_list(data) do
     bit_depth = bit_depth_to_value(depth)
 
