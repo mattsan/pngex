@@ -3,13 +3,6 @@ defmodule Pngex.Raster do
 
   import Pngex, only: [bit_depth_to_value: 1, is_color_type: 1]
 
-  def generate(%Pngex{} = pngex, data) when is_list(data) do
-    data
-    |> list_to_pixels(pngex)
-    |> Enum.chunk_every(pngex.width)
-    |> Enum.map(&[pngex.scanline_filter | &1])
-  end
-
   def generate(%Pngex{} = pngex, data) when is_binary(data) do
     row_size = pngex.width * bit_depth_to_value(pngex.depth) * bytes_par_pixel(pngex.type)
 
@@ -26,6 +19,13 @@ defmodule Pngex.Raster do
     |> Enum.to_list()
   end
 
+  def generate(%Pngex{} = pngex, data) when is_list(data) do
+    data
+    |> list_to_pixels(pngex)
+    |> Enum.chunk_every(pngex.width)
+    |> Enum.map(&[pngex.scanline_filter | &1])
+  end
+
   defp bytes_par_pixel(type) when is_color_type(type) do
     case type do
       :gray -> 1
@@ -36,35 +36,48 @@ defmodule Pngex.Raster do
     end
   end
 
-  defp list_to_pixels([], _) do
-    []
+  @spec list_to_pixels(Pngex.data(), Pngex.t()) :: iolist()
+  defp list_to_pixels([{_r, _g, _b} | _] = data, %Pngex{type: :rgb, depth: depth}) do
+    bit_depth = bit_depth_to_value(depth)
+
+    for {r, g, b} <- data do
+      <<r::size(bit_depth), g::size(bit_depth), b::size(bit_depth)>>
+    end
   end
 
-  defp list_to_pixels([{r, g, b} | rest], %Pngex{type: :rgb, depth: depth} = pngex) do
-    color_depth = bit_depth_to_value(depth)
-    pixel = <<r::size(color_depth), g::size(color_depth), b::size(color_depth)>>
+  defp list_to_pixels(data, %Pngex{type: :rgb, depth: depth}) when is_list(data) do
+    bit_depth = bit_depth_to_value(depth)
 
-    [pixel | list_to_pixels(rest, pngex)]
+    data
+    |> Stream.unfold(fn
+      [] ->
+        nil
+
+      [r, g, b | rest] ->
+        {<<r::size(bit_depth), g::size(bit_depth), b::size(bit_depth)>>, rest}
+    end)
+    |> Enum.to_list()
   end
 
-  defp list_to_pixels([r, g, b | rest], %Pngex{type: :rgb, depth: depth} = pngex) do
-    color_depth = bit_depth_to_value(depth)
-    pixel = <<r::size(color_depth), g::size(color_depth), b::size(color_depth)>>
+  defp list_to_pixels(data, %Pngex{type: :gray, depth: depth}) when is_list(data) do
+    bit_depth = bit_depth_to_value(depth)
 
-    [pixel | list_to_pixels(rest, pngex)]
+    for n <- data do
+      <<n::size(bit_depth)>>
+    end
   end
 
-  defp list_to_pixels([n | rest], %Pngex{type: :gray, depth: depth} = pngex) do
-    color_depth = bit_depth_to_value(depth)
-    pixel = <<n::size(color_depth)>>
+  defp list_to_pixels(data, %Pngex{type: :gray_and_alpha, depth: depth}) when is_list(data) do
+    bit_depth = bit_depth_to_value(depth)
 
-    [pixel | list_to_pixels(rest, pngex)]
-  end
+    data
+    |> Stream.unfold(fn
+      [] ->
+        nil
 
-  defp list_to_pixels([n, a | rest], %Pngex{type: :gray_and_alpha, depth: depth} = pngex) do
-    color_depth = bit_depth_to_value(depth)
-    pixel = <<n::size(color_depth), a::size(color_depth)>>
-
-    [pixel | list_to_pixels(rest, pngex)]
+      [n, a | rest] ->
+        {<<n::size(bit_depth), a::size(bit_depth)>>, rest}
+    end)
+    |> Enum.to_list()
   end
 end

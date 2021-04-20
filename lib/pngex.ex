@@ -3,7 +3,7 @@ defmodule Pngex do
   Generates PNG images.
   """
 
-  alias Pngex.Zip
+  alias Pngex.{Chunk, Raster, Zip}
 
   @scanline_filter_none 0
 
@@ -80,8 +80,10 @@ defmodule Pngex do
 
   @doc false
   defguard is_color_type(type) when type in [:gray, :rgb, :indexed, :gray_and_alpha, :rgba]
+
   defguardp is_bit_depth(depth) when depth in [:depth8, :depth16]
   defguardp is_pos_int32(value) when is_integer(value) and value > 0 and value < 0x1_00_00_00_00
+  defguardp is_uint(n) when is_integer(n) and n >= 0
 
   @doc false
   @spec color_type_to_value(color_type()) :: 0 | 2 | 3 | 4 | 6
@@ -97,8 +99,12 @@ defmodule Pngex do
 
   @doc false
   @spec bit_depth_to_value(bit_depth()) :: 8 | 16
-  def bit_depth_to_value(:depth8), do: 8
-  def bit_depth_to_value(:depth16), do: 16
+  def bit_depth_to_value(depth) do
+    case depth do
+      :depth8 -> 8
+      :depth16 -> 16
+    end
+  end
 
   @doc """
   Creates a new Pngex structure.
@@ -222,33 +228,26 @@ defmodule Pngex do
       @interlace_method
     >>
 
-    raster = Pngex.Raster.generate(pngex, data)
+    raster = Raster.generate(pngex, data)
 
     [
       @magic_number,
-      build_chunk("IHDR", header),
-      build_chunk("IDAT", Zip.compress(raster)),
-      build_chunk("IEND", "")
+      Chunk.build("IHDR", header),
+      Chunk.build("IDAT", Zip.compress(raster)),
+      Chunk.build("IEND", "")
     ]
   end
 
-  defp is_valid_palette([]), do: true
+  defp is_valid_palette(palette) do
+    case palette do
+      [] ->
+        true
 
-  defp is_valid_palette([{r, g, b} | rest])
-       when is_integer(r) and is_integer(g) and is_integer(b) and r >= 0 and g >= 0 and b >= 0,
-       do: is_valid_palette(rest)
+      [{r, g, b} | rest] when is_uint(r) and is_uint(g) and is_uint(b) ->
+        is_valid_palette(rest)
 
-  defp is_valid_palette(_), do: false
-
-  defp build_chunk(type, data) do
-    length = :erlang.iolist_size(data)
-    crc = :erlang.crc32([type, data])
-
-    [
-      <<length::big-size(32)>>,
-      type,
-      data,
-      <<crc::big-size(32)>>
-    ]
+      _ ->
+        false
+    end
   end
 end
