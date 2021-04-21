@@ -78,16 +78,14 @@ defmodule Pngex do
           scanline_filter: scanline_filter()
         }
 
-  @doc false
-  defguard is_color_type(type) when type in [:gray, :rgb, :indexed, :gray_and_alpha, :rgba]
-
+  defguardp is_color_type(type) when type in [:gray, :rgb, :indexed, :gray_and_alpha, :rgba]
   defguardp is_bit_depth(depth) when depth in [:depth8, :depth16]
   defguardp is_pos_int32(value) when is_integer(value) and value > 0 and value < 0x1_00_00_00_00
   defguardp is_uint(n) when is_integer(n) and n >= 0
 
   @doc false
-  @spec color_type_to_value(color_type()) :: 0 | 2 | 3 | 4 | 6
-  def color_type_to_value(type) when is_color_type(type) do
+  @spec color_type_to_value(t()) :: 0 | 2 | 3 | 4 | 6
+  def color_type_to_value(%Pngex{type: type}) when is_color_type(type) do
     case type do
       :gray -> 0
       :rgb -> 2
@@ -98,8 +96,8 @@ defmodule Pngex do
   end
 
   @doc false
-  @spec bit_depth_to_value(bit_depth()) :: 8 | 16
-  def bit_depth_to_value(depth) do
+  @spec bit_depth_to_value(t()) :: 8 | 16
+  def bit_depth_to_value(%Pngex{depth: depth}) do
     case depth do
       :depth8 -> 8
       :depth16 -> 16
@@ -221,8 +219,8 @@ defmodule Pngex do
     header = <<
       pngex.width::32,
       pngex.height::32,
-      bit_depth_to_value(pngex.depth),
-      color_type_to_value(pngex.type),
+      bit_depth_to_value(pngex),
+      color_type_to_value(pngex),
       @compression_method,
       @filter_method,
       @interlace_method
@@ -234,8 +232,8 @@ defmodule Pngex do
     idat = Chunk.build("IDAT", Zip.compress(raster))
     iend = Chunk.build("IEND", "")
 
-    case pngex.type do
-      :indexed ->
+    case pngex do
+      %Pngex{type: :indexed} ->
         plte = Chunk.build("PLTE", for({r, g, b} <- pngex.palette, do: <<r, g, b>>))
 
         [@magic_number, ihdr, plte, idat, iend]
