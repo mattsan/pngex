@@ -230,12 +230,19 @@ defmodule Pngex do
 
     raster = Raster.generate(pngex, data)
 
-    [
-      @magic_number,
-      Chunk.build("IHDR", header),
-      Chunk.build("IDAT", Zip.compress(raster)),
-      Chunk.build("IEND", "")
-    ]
+    ihdr = Chunk.build("IHDR", header)
+    idat = Chunk.build("IDAT", Zip.compress(raster))
+    iend = Chunk.build("IEND", "")
+
+    case pngex.type do
+      :indexed ->
+        plte = Chunk.build("PLTE", for({r, g, b} <- pngex.palette, do: <<r, g, b>>))
+
+        [@magic_number, ihdr, plte, idat, iend]
+
+      _ ->
+        [@magic_number, ihdr, idat, iend]
+    end
   end
 
   defp is_valid_palette(palette) do
