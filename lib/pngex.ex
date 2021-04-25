@@ -28,10 +28,13 @@ defmodule Pngex do
   @typedoc """
   Bit depth.
 
+  - `:depth1` - 1 bits
+  - `:depth2` - 2 bits
+  - `:depth4` - 4 bits
   - `:depth8` - 8 bits
   - `:depth16` - 16 bits
   """
-  @type bit_depth :: :depth8 | :depth16
+  @type bit_depth :: :depth1 | :depth2 | :depth4 | :depth8 | :depth16
 
   @typedoc """
   Positive 32-bit integer.
@@ -79,7 +82,7 @@ defmodule Pngex do
         }
 
   defguardp is_color_type(type) when type in [:gray, :rgb, :indexed, :gray_and_alpha, :rgba]
-  defguardp is_bit_depth(depth) when depth in [:depth8, :depth16]
+  defguardp is_bit_depth(depth) when depth in [:depth1, :depth2, :depth4, :depth8, :depth16]
   defguardp is_pos_int32(value) when is_integer(value) and value > 0 and value < 0x1_00_00_00_00
   defguardp is_uint(n) when is_integer(n) and n >= 0
 
@@ -96,9 +99,12 @@ defmodule Pngex do
   end
 
   @doc false
-  @spec bit_depth_to_value(t()) :: 8 | 16
+  @spec bit_depth_to_value(t()) :: 1 | 2 | 4 | 8 | 16
   def bit_depth_to_value(%Pngex{depth: depth}) do
     case depth do
+      :depth1 -> 1
+      :depth2 -> 2
+      :depth4 -> 4
       :depth8 -> 8
       :depth16 -> 16
     end
@@ -115,7 +121,7 @@ defmodule Pngex do
     - `:indexed` - palette color
     - `:gray_and_alpha` - grayscale and alpha
     - `:rgba` - RGB and alpha
-  - `:depth` - color depth; `:depth8` (default) or `:depth16`
+  - `:depth` - color depth; `:depth2`, `:depth4`, `:depth8` (default) or `:depth16`
   - `:width` - image width; 32-bit integer (1..4,294,967,295)
   - `:height` - image height; 32-bit integer (1..4,294,967,295)
   - `:palette` - palette table; list of RGB color tuples
