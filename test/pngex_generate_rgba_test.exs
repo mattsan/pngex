@@ -1,137 +1,85 @@
 defmodule PngexGenerateRGBATest do
   use ExUnit.Case
 
-  describe "generate/2 for RGBA-8" do
-    setup do
-      pngex = Pngex.new(type: :rgba, depth: :depth8, width: 256, height: 256)
+  @depths [8, 16]
+  @sizes 249..256
 
-      {:ok, expected} =
-        "test/fixtures"
-        |> Path.join("rgba8.png")
-        |> File.read()
+  setup context do
+    pngex =
+      Pngex.new(
+        type: context.type,
+        depth: String.to_atom("depth#{context.depth}"),
+        width: context.width,
+        height: context.height
+      )
 
-      [pngex: pngex, expected: expected]
-    end
+    {:ok, expected} =
+      "test/fixtures"
+      |> Path.join(context.expected_image)
+      |> File.read()
 
-    test "list of integers", %{pngex: pngex, expected: expected} do
-      data =
-        Enum.flat_map(0..65535, fn n ->
-          r = div(n, 256)
-          g = rem(n, 256)
-          b = 255 - max(r, g)
-          a = if r in 64..191 && g in 64..191, do: 255, else: 0
-          [r, g, b, a]
-        end)
-
-      actual =
-        pngex
-        |> Pngex.generate(data)
-        |> :erlang.iolist_to_binary()
-
-      assert expected == actual
-    end
-
-    test "list of RGB color", %{pngex: pngex, expected: expected} do
-      data =
-        Enum.map(0..65535, fn n ->
-          r = div(n, 256)
-          g = rem(n, 256)
-          b = 255 - max(r, g)
-          a = if r in 64..191 && g in 64..191, do: 255, else: 0
-          {r, g, b, a}
-        end)
-
-      actual =
-        pngex
-        |> Pngex.generate(data)
-        |> :erlang.iolist_to_binary()
-
-      assert expected == actual
-    end
-
-    test "binary", %{pngex: pngex, expected: expected} do
-      data =
-        for n <- 0..65535, into: <<>> do
-          r = div(n, 256)
-          g = rem(n, 256)
-          b = 255 - max(r, g)
-          a = if r in 64..191 && g in 64..191, do: 65535, else: 0
-          <<r, g, b, a>>
-        end
-
-      actual =
-        pngex
-        |> Pngex.generate(data)
-        |> :erlang.iolist_to_binary()
-
-      assert expected == actual
-    end
+    [pngex: pngex, expected: expected]
   end
 
-  describe "generate/2 for RGBA-16" do
-    setup do
-      pngex = Pngex.new(type: :rgba, depth: :depth16, width: 256, height: 256)
+  @depths
+  |> Enum.each(fn depth ->
+    describe "generate/2 for RGBA #{depth}" do
+      @describetag type: :rgba, depth: depth
 
-      {:ok, expected} =
-        "test/fixtures"
-        |> Path.join("rgba16.png")
-        |> File.read()
+      @sizes
+      |> Enum.map(&{&1, &1, "rgba/depth#{depth}/#{&1}x#{&1}.png"})
+      |> Enum.each(fn {width, height, expected_image} ->
+        @tag width: width, height: height, expected_image: expected_image
+        test "list of integers (#{width}x#{height})", context do
+          data =
+            Enum.flat_map(0..(context.width * context.height - 1), fn n ->
+              {r, g, b} = TestPixel.get_rgb(context, n)
+              a = TestPixel.get_alpha(context, n)
+              [r, g, b, a]
+            end)
 
-      [pngex: pngex, expected: expected]
-    end
+          actual =
+            context.pngex
+            |> Pngex.generate(data)
+            |> :erlang.iolist_to_binary()
 
-    test "list of integers", %{pngex: pngex, expected: expected} do
-      data =
-        Enum.flat_map(0..65535, fn n ->
-          r = div(n, 256) * 256
-          g = rem(n, 256) * 256
-          b = 65535 - max(r, g)
-          a = if r in 16384..49151 && g in 16384..49151, do: 65535, else: 0
-          [r, g, b, a]
-        end)
-
-      actual =
-        pngex
-        |> Pngex.generate(data)
-        |> :erlang.iolist_to_binary()
-
-      assert expected == actual
-    end
-
-    test "list of RGBA color", %{pngex: pngex, expected: expected} do
-      data =
-        Enum.map(0..65535, fn n ->
-          r = div(n, 256) * 256
-          g = rem(n, 256) * 256
-          b = 65535 - max(r, g)
-          a = if r in 16384..49151 && g in 16384..49151, do: 65535, else: 0
-          {r, g, b, a}
-        end)
-
-      actual =
-        pngex
-        |> Pngex.generate(data)
-        |> :erlang.iolist_to_binary()
-
-      assert expected == actual
-    end
-
-    test "binary", %{pngex: pngex, expected: expected} do
-      data =
-        for n <- 0..65535, into: <<>> do
-          r = div(n, 256) * 256
-          g = rem(n, 256) * 256
-          b = 65535 - max(r, g)
-          a = if r in 16384..49151 && g in 16384..49151, do: 65535, else: 0
-          <<r::16, g::16, b::16, a::16>>
+          assert context.expected == actual
         end
 
-      actual =
-        pngex
-        |> Pngex.generate(data)
-        |> :erlang.iolist_to_binary()
+        @tag width: width, height: height, expected_image: expected_image
+        test "list of RGB color (#{width}x#{height})", context do
+          data =
+            Enum.map(0..(context.width * context.height - 1), fn n ->
+              {r, g, b} = TestPixel.get_rgb(context, n)
+              a = TestPixel.get_alpha(context, n)
+              {r, g, b, a}
+            end)
 
-      assert expected == actual
+          actual =
+            context.pngex
+            |> Pngex.generate(data)
+            |> :erlang.iolist_to_binary()
+
+          assert context.expected == actual
+        end
+
+        @tag width: width, height: height, expected_image: expected_image
+        test "binary (#{width}x#{height})", %{depth: depth} = context do
+          data =
+            for n <- 0..(context.width * context.height - 1), into: <<>> do
+              {r, g, b} = TestPixel.get_rgb(context, n)
+              a = TestPixel.get_alpha(context, n)
+              <<r::size(depth), g::size(depth), b::size(depth), a::size(depth)>>
+            end
+
+          actual =
+            context.pngex
+            |> Pngex.generate(data)
+            |> :erlang.iolist_to_binary()
+
+          assert context.expected == actual
+        end
+      end)
     end
-  end
+  end)
 end

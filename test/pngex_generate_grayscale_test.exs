@@ -27,14 +27,14 @@ defmodule PngexGenerateGrayscaleTest do
       @describetag type: :gray, depth: depth
 
       @sizes
-      |> Enum.map(&{&1, &1, "grayscale_depth#{depth}_#{&1}x#{&1}.png"})
+      |> Enum.map(&{&1, &1, "grayscale/depth#{depth}/#{&1}x#{&1}.png"})
       |> Enum.each(fn {width, height, expected_image} ->
         @tag width: width, height: height, expected_image: expected_image
         test "list of integers (#{width}x#{height})", context do
           data =
             Enum.map(
               0..(context.width * context.height - 1),
-              &GrayscalePixel.get_color(context, &1)
+              &TestPixel.get_grayscale(context, &1)
             )
 
           actual =
@@ -49,7 +49,7 @@ defmodule PngexGenerateGrayscaleTest do
         test "binary (#{width}x#{height})", %{depth: depth} = context do
           data =
             for n <- 0..(context.width * context.height - 1), into: <<>> do
-              <<GrayscalePixel.get_color(context, n)::size(depth)>>
+              <<TestPixel.get_grayscale(context, n)::size(depth)>>
             end
 
           actual =
