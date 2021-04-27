@@ -83,7 +83,8 @@ defmodule Pngex.Raster do
     end)
   end
 
-  defp list_to_pixels(data, %Pngex{type: :gray, width: width} = pngex) when is_list(data) do
+  defp list_to_pixels(data, %Pngex{type: type, width: width} = pngex)
+       when type in [:gray, :indexed] and is_list(data) do
     case bit_depth_to_value(pngex) do
       1 ->
         data
@@ -158,11 +159,5 @@ defmodule Pngex.Raster do
       <<n::size(bit_depth), a::size(bit_depth)>>
     end)
     |> Enum.to_list()
-  end
-
-  defp list_to_pixels(data, %Pngex{type: :indexed} = pngex) when is_list(data) do
-    bit_depth = bit_depth_to_value(pngex)
-
-    Enum.map(data, &<<&1::size(bit_depth)>>)
   end
 end
