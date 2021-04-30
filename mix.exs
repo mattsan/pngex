@@ -8,7 +8,11 @@ defmodule Pngex.MixProject do
       elixir: "~> 1.11",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
-      docs: docs()
+      docs: docs(),
+      package: package(),
+      description: """
+      A library for generating PNG images.
+      """
     ]
   end
 
@@ -32,6 +36,13 @@ defmodule Pngex.MixProject do
       groups_for_functions: [
         Guards: &(&1[:guard] == true)
       ]
+    ]
+  end
+
+  defp package do
+    [
+      licenses: ["MIT"],
+      links: %{github: "https://github.com/mattsan/ex_idobata"}
     ]
   end
 end

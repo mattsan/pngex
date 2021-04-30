@@ -38,21 +38,77 @@ defmodule Pngex do
 
   @typedoc """
   Positive 32-bit integer.
+
+  It's for width and height.
   """
   @type pos_int32 :: 1..0xFF_FF_FF_FF
 
   @typedoc """
   Data type of RGB color.
+
+  A tuple of red, green and blue values.
   """
-  @type rgb_color :: {pos_integer(), pos_integer(), pos_integer()}
+  @type rgb_color :: {r :: pos_integer(), g :: pos_integer(), b :: pos_integer()}
 
   @typedoc """
   Data type of RGB color and alpha.
+
+  A tuple of red, green, blue and alpha values.
   """
-  @type rgba_color :: {pos_integer(), pos_integer(), pos_integer(), pos_integer()}
+  @type rgba_color ::
+          {r :: pos_integer(), g :: pos_integer(), b :: pos_integer(), a :: pos_integer()}
 
   @typedoc """
   Image data.
+
+  ## RGB
+
+  | type             | example                             |
+  |------------------|-------------------------------------|
+  | binary           | `<<r0, g0, b0, r1, g1, b1, ...>>`   |
+  | list of integers | `[r0, g0, b0, r1, g1, b1, ...]`     |
+  | list of tuples   | `[{r0, g0, b0}, {r1, g1, b1}, ...]` |
+
+  ## RGB and Alpha
+
+  | type             | example                                     |
+  |------------------|---------------------------------------------|
+  | binary           | `<<r0, g0, b0, a0, r1, g1, b1, a1, ...>>`   |
+  | list of integers | `[r0, g0, b0, a0, r1, g1, b1, a1, ...]`     |
+  | list of tuples   | `[{r0, g0, b0, a0}, {r1, g1, b1, a1}, ...]` |
+
+  ## Grayscale
+
+  | type             | example             |
+  |------------------|---------------------|
+  | binary           | `<<c0, c1, ...>>`   |
+  | list of integers | `[c0, c1, ...]`     |
+
+  ## Grayscale and Alpha
+
+  | type             | example                     |
+  |------------------|-----------------------------|
+  | binary           | `<<c0, a0, c1, a1, ...>>`   |
+  | list of integers | `[c0, a0, c1, a1, ...]`     |
+
+  ## Indexed
+
+  | type             | example             |
+  |------------------|---------------------|
+  | binary           | `<<c0, c1, ...>>`   |
+  | list of integers | `[c0, c1, ...]`     |
+
+  ## Depth of binary
+
+  If you use binaries, you may need to use size options.
+
+  | depth      | example                                                  |
+  |------------|----------------------------------------------------------|
+  | `:depth1`  | `<<c0::size(1), c1::size(1), ...>>`                      |
+  | `:depth2`  | `<<c0::size(2), c1::size(2), ...>>`                      |
+  | `:depth4`  | `<<c0::size(4), c1::size(4), ...>>`                      |
+  | `:depth8`  | `<<c0, c1, ...>>` or `<<c0::size(8), c1::size(8), ...>>` |
+  | `:depth16` | `<<c0::size(16), c1::size(16), ...>>`                    |
   """
   @type data :: binary() | [pos_integer()] | [rgb_color()] | [rgba_color()]
 
@@ -129,7 +185,14 @@ defmodule Pngex do
   ## Examples
 
   ```elixir
-  Pngex.new(type: :indexed, depth: :depth8, width: 640, height: 480, palette: [{0, 0, 0}, {255, 255, 255}])
+  pngex =
+    Pngex.new(
+      type: :indexed,
+      depth: :depth8,
+      width: 640,
+      height: 480,
+      palette: [{0, 0, 0}, {255, 255, 255}]
+    )
   ```
   """
   @spec new(keyword()) :: t() | {:error, keyword()}
@@ -213,6 +276,18 @@ defmodule Pngex do
 
   @doc """
   Sets image width.
+
+  ## Examples
+
+  ```elixir
+  iex> Pngex.new() |> Pngex.set_width(128)
+  %Pngex{width: 128}
+  ```
+
+  ```elixir
+  iex> Pngex.new() |> Pngex.set_width(0)
+  {:error, invalid_width: 0}
+  ```
   """
   @spec set_width(t(), pos_int32()) :: t() | {:error, invalid_width: any()}
   def set_width(%Pngex{} = pngex, width) when is_pos_int32(width) do
@@ -225,6 +300,18 @@ defmodule Pngex do
 
   @doc """
   Sets image hieght.
+
+  ## Examples
+
+  ```elixir
+  iex> Pngex.new() |> Pngex.set_height(128)
+  %Pngex{height: 128}
+  ```
+
+  ```elixir
+  iex> Pngex.new() |> Pngex.set_height(0)
+  {:error, invalid_height: 0}
+  ```
   """
   @spec set_height(t(), pos_int32()) :: t() | {:error, invalid_height: any()}
   def set_height(%Pngex{} = pngex, height) when is_pos_int32(height) do
@@ -237,6 +324,18 @@ defmodule Pngex do
 
   @doc """
   Sets image width and height.
+
+  ## Examples
+
+  ```elixir
+  iex> Pngex.new() |> Pngex.set_size(640, 480)
+  %Pngex{width: 640, height: 480}
+  ```
+
+  ```elixir
+  iex> Pngex.new() |> Pngex.set_size(0, 480)
+  {:error, invalid_size: %{width: 0}}
+  ```
   """
   @spec set_size(t(), pos_int32(), pos_int32()) :: t() | {:error, invalid_size: map()}
   def set_size(%Pngex{} = pngex, width, height) do
@@ -250,6 +349,18 @@ defmodule Pngex do
 
   @doc """
   Sets a palette.
+
+  ## Examples
+
+  ```elixir
+  iex> Pngex.new() |> Pngex.set_palette([{0, 0, 0}, {255, 0, 0}, {0, 255, 0}, {0, 0, 255}])
+  %Pngex{palette: [{0, 0, 0}, {255, 0, 0}, {0, 255, 0}, {0, 0, 255}]}
+  ```
+
+  ```elixir
+  iex> Pngex.new() |> Pngex.set_palette([0, 0, 0, 255, 0, 0, 0, 255, 0, 0, 0, 255])
+  {:error, invalid_palette: [0, 0, 0, 255, 0, 0, 0, 255, 0, 0, 0, 255]}
+  ```
   """
   @spec set_palette(t(), [rgb_color()]) :: t() | {:error, invalid_palette: any()}
   def set_palette(%Pngex{} = pngex, palette) do
@@ -267,6 +378,16 @@ defmodule Pngex do
 
   @doc """
   Generates a PNG image.
+
+  ## Examples
+
+  ```elixir
+  image =
+    Pngex.new(type: :rgb, depth: :depth8, width: 16, height: 16)
+    |> Pngex.generate(for(c <- 0..255, do: {c, 255 - c, 0}))
+
+  File.write("image.png", image)
+  ```
   """
   @spec generate(t(), data()) :: iolist()
   def generate(%Pngex{} = pngex, data) do
