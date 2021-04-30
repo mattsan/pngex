@@ -74,6 +74,66 @@ defmodule PngexTest do
     end
   end
 
+  describe "set_type/2" do
+    setup do
+      [pngex: Pngex.new()]
+    end
+
+    test "valid type: rgb", %{pngex: pngex} do
+      assert %Pngex{type: :rgb} = pngex |> Pngex.set_type(:rgb)
+    end
+
+    test "valid type: rgba", %{pngex: pngex} do
+      assert %Pngex{type: :rgba} = pngex |> Pngex.set_type(:rgba)
+    end
+
+    test "valid type: gray", %{pngex: pngex} do
+      assert %Pngex{type: :gray} = pngex |> Pngex.set_type(:gray)
+    end
+
+    test "valid type: gray_and_alpha", %{pngex: pngex} do
+      assert %Pngex{type: :gray_and_alpha} = pngex |> Pngex.set_type(:gray_and_alpha)
+    end
+
+    test "valid type: indexed", %{pngex: pngex} do
+      assert %Pngex{type: :indexed} = pngex |> Pngex.set_type(:indexed)
+    end
+
+    test "invalid type", %{pngex: pngex} do
+      assert {:error, invalid_type: :monotone} = pngex |> Pngex.set_type(:monotone)
+    end
+  end
+
+  describe "set_depth/2" do
+    setup do
+      [pngex: Pngex.new()]
+    end
+
+    test "valid depth: depth1", %{pngex: pngex} do
+      assert %Pngex{depth: :depth1} = pngex |> Pngex.set_depth(:depth1)
+    end
+
+    test "valid depth: depth2", %{pngex: pngex} do
+      assert %Pngex{depth: :depth2} = pngex |> Pngex.set_depth(:depth2)
+    end
+
+    test "valid depth: depth4", %{pngex: pngex} do
+      assert %Pngex{depth: :depth4} = pngex |> Pngex.set_depth(:depth4)
+    end
+
+    test "valid depth: depth8", %{pngex: pngex} do
+      assert %Pngex{depth: :depth8} = pngex |> Pngex.set_depth(:depth8)
+    end
+
+    test "valid depth: depth16", %{pngex: pngex} do
+      assert %Pngex{depth: :depth16} = pngex |> Pngex.set_depth(:depth16)
+    end
+
+    test "invvalid depth", %{pngex: pngex} do
+      assert {:error, invalid_depth: :depth15} = pngex |> Pngex.set_depth(:depth15)
+    end
+  end
+
   describe "set_width/2" do
     setup do
       [pngex: Pngex.new()]

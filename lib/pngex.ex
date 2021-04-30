@@ -164,6 +164,54 @@ defmodule Pngex do
   end
 
   @doc """
+  Sets color type.
+
+  ## Examples
+
+  ```elixir
+  iex> Pngex.new() |> Pngex.set_type(:gray)
+  %Pngex{type: :gray}
+  ```
+
+  ```elixir
+  iex> Pngex.new() |> Pngex.set_type(:monotone)
+  {:error, invalid_type: :monotone}
+  ```
+  """
+  @spec set_type(Pngex.t(), color_type()) :: Pngex.t() | {:error, invalid_type: any()}
+  def set_type(%Pngex{} = pngex, type) when is_color_type(type) do
+    %{pngex | type: type}
+  end
+
+  def set_type(%Pngex{}, type) do
+    {:error, invalid_type: type}
+  end
+
+  @doc """
+  Sets bit depth.
+
+  ## Examples
+
+  ```elixir
+  iex> Pngex.new() |> Pngex.set_depth(:depth16)
+  %Pngex{depth: :depth16}
+  ```
+
+  ```elixir
+  iex> Pngex.new() |> Pngex.set_depth(:depth15)
+  {:error, invalid_depth: :depth15}
+  ```
+  """
+  @spec set_depth(Pngex.t(), bit_depth()) :: Pngex.t() | {:error, invalid_depth: any()}
+  def set_depth(%Pngex{} = pngex, depth) when is_bit_depth(depth) do
+    %{pngex | depth: depth}
+  end
+
+  def set_depth(%Pngex{}, depth) do
+    {:error, invalid_depth: depth}
+  end
+
+  @doc """
   Sets image width.
   """
   @spec set_width(t(), pos_int32()) :: t() | {:error, invalid_width: any()}
