@@ -1,4 +1,4 @@
-defmodule Pngex.Raster do
+defmodule Pngex.Bitmap do
   @moduledoc false
 
   import Pngex, only: [bit_depth_to_value: 1]
@@ -11,8 +11,8 @@ defmodule Pngex.Raster do
     rgba: 4
   }
 
-  @spec generate(Pngex.t(), Pngex.data()) :: iolist()
-  def generate(%Pngex{} = pngex, data) when is_bitstring(data) do
+  @spec build(Pngex.t(), Pngex.data()) :: iolist()
+  def build(%Pngex{} = pngex, data) when is_bitstring(data) do
     row_size = pngex.width * bit_depth_to_value(pngex) * @bytes_par_pixel[pngex.type]
     padding_size = padding_size_for_byte_boundary(row_size)
 
@@ -30,7 +30,7 @@ defmodule Pngex.Raster do
     |> Enum.to_list()
   end
 
-  def generate(%Pngex{} = pngex, data) when is_list(data) do
+  def build(%Pngex{} = pngex, data) when is_list(data) do
     data
     |> list_to_pixels(pngex)
     |> Enum.map(&[pngex.scanline_filter | &1])

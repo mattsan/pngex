@@ -1,4 +1,4 @@
-defmodule PngexGenerateRGBTest do
+defmodule Pngex.Bitmap.RGBTest do
   use ExUnit.Case
 
   @depths [8, 16]

@@ -3,7 +3,7 @@ defmodule Pngex do
   Generates PNG images.
   """
 
-  alias Pngex.{Chunk, Raster, Zip}
+  alias Pngex.{Chunk, Bitmap, Zip}
 
   @scanline_filter_none 0
 
@@ -401,10 +401,10 @@ defmodule Pngex do
       @interlace_method
     >>
 
-    raster = Raster.generate(pngex, data)
+    bitmap = Bitmap.build(pngex, data)
 
     ihdr = Chunk.build("IHDR", header)
-    idat = Chunk.build("IDAT", Zip.compress(raster))
+    idat = Chunk.build("IDAT", Zip.compress(bitmap))
     iend = Chunk.build("IEND", "")
 
     case pngex do

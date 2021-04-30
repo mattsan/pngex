@@ -1,7 +1,7 @@
-defmodule PngexGenerateRGBATest do
+defmodule Pngex.Bitmap.GrayscaleTest do
   use ExUnit.Case
 
-  @depths [8, 16]
+  @depths [1, 2, 4, 8, 16]
   @sizes 249..256
 
   setup context do
@@ -23,37 +23,19 @@ defmodule PngexGenerateRGBATest do
 
   @depths
   |> Enum.each(fn depth ->
-    describe "generate/2 for RGBA #{depth}" do
-      @describetag type: :rgba, depth: depth
+    describe "generate/2 for grayscale (depth #{depth})" do
+      @describetag type: :gray, depth: depth
 
       @sizes
-      |> Enum.map(&{&1, &1, "rgba/depth#{depth}/#{&1}x#{&1}.png"})
+      |> Enum.map(&{&1, &1, "grayscale/depth#{depth}/#{&1}x#{&1}.png"})
       |> Enum.each(fn {width, height, expected_image} ->
         @tag width: width, height: height, expected_image: expected_image
         test "list of integers (#{width}x#{height})", context do
           data =
-            Enum.flat_map(0..(context.width * context.height - 1), fn n ->
-              {r, g, b} = TestPixel.get_rgb(context, n)
-              a = TestPixel.get_alpha(context, n)
-              [r, g, b, a]
-            end)
-
-          actual =
-            context.pngex
-            |> Pngex.generate(data)
-            |> :erlang.iolist_to_binary()
-
-          assert context.expected == actual
-        end
-
-        @tag width: width, height: height, expected_image: expected_image
-        test "list of RGB color (#{width}x#{height})", context do
-          data =
-            Enum.map(0..(context.width * context.height - 1), fn n ->
-              {r, g, b} = TestPixel.get_rgb(context, n)
-              a = TestPixel.get_alpha(context, n)
-              {r, g, b, a}
-            end)
+            Enum.map(
+              0..(context.width * context.height - 1),
+              &TestPixel.get_grayscale(context, &1)
+            )
 
           actual =
             context.pngex
@@ -67,9 +49,7 @@ defmodule PngexGenerateRGBATest do
         test "binary (#{width}x#{height})", %{depth: depth} = context do
           data =
             for n <- 0..(context.width * context.height - 1), into: <<>> do
-              {r, g, b} = TestPixel.get_rgb(context, n)
-              a = TestPixel.get_alpha(context, n)
-              <<r::size(depth), g::size(depth), b::size(depth), a::size(depth)>>
+              <<TestPixel.get_grayscale(context, n)::size(depth)>>
             end
 
           actual =
