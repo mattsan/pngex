@@ -4,7 +4,7 @@ defmodule Pngex.MixProject do
   def project do
     [
       app: :pngex,
-      version: "0.1.0",
+      version: "0.1.1",
       elixir: "~> 1.11",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -42,7 +42,7 @@ defmodule Pngex.MixProject do
   defp package do
     [
       licenses: ["MIT"],
-      links: %{github: "https://github.com/mattsan/ex_idobata"}
+      links: %{github: "https://github.com/mattsan/pngex"}
     ]
   end
 end
