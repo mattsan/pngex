@@ -31,12 +31,12 @@ defmodule Pngex.Bitmap.IndexedTest do
       |> Enum.each(fn {width, height, expected_image} ->
         @tag width: width, height: height, expected_image: expected_image
         test "list of integers (#{width}x#{height})", context do
-          palette = TestPixel.get_palette(context)
+          palette = TestPixel.Palette.get(context)
 
           data =
             Enum.flat_map(0..(context.height - 1), fn y ->
               Enum.map(0..(context.width - 1), fn x ->
-                TestPixel.get_color_index(context, x, y)
+                TestPixel.ColorIndex.get(context, x, y)
               end)
             end)
 
@@ -51,12 +51,12 @@ defmodule Pngex.Bitmap.IndexedTest do
 
         @tag width: width, height: height, expected_image: expected_image
         test "binary (#{width}x#{height})", %{depth: depth} = context do
-          palette = TestPixel.get_palette(context)
+          palette = TestPixel.Palette.get(context)
 
           data =
             for y <- 0..(context.height - 1), into: <<>> do
               for x <- 0..(context.width - 1), into: <<>> do
-                <<TestPixel.get_color_index(context, x, y)::size(depth)>>
+                <<TestPixel.ColorIndex.get(context, x, y)::size(depth)>>
               end
             end
 

@@ -33,8 +33,8 @@ defmodule Pngex.Bitmap.RGBATest do
         test "list of integers (#{width}x#{height})", context do
           data =
             Enum.flat_map(0..(context.width * context.height - 1), fn n ->
-              {r, g, b} = TestPixel.get_rgb(context, n)
-              a = TestPixel.get_alpha(context, n)
+              {r, g, b} = TestPixel.RGB.get(context, n)
+              a = TestPixel.Alpha.get(context, n)
               [r, g, b, a]
             end)
 
@@ -50,8 +50,8 @@ defmodule Pngex.Bitmap.RGBATest do
         test "list of RGB color (#{width}x#{height})", context do
           data =
             Enum.map(0..(context.width * context.height - 1), fn n ->
-              {r, g, b} = TestPixel.get_rgb(context, n)
-              a = TestPixel.get_alpha(context, n)
+              {r, g, b} = TestPixel.RGB.get(context, n)
+              a = TestPixel.Alpha.get(context, n)
               {r, g, b, a}
             end)
 
@@ -67,8 +67,8 @@ defmodule Pngex.Bitmap.RGBATest do
         test "binary (#{width}x#{height})", %{depth: depth} = context do
           data =
             for n <- 0..(context.width * context.height - 1), into: <<>> do
-              {r, g, b} = TestPixel.get_rgb(context, n)
-              a = TestPixel.get_alpha(context, n)
+              {r, g, b} = TestPixel.RGB.get(context, n)
+              a = TestPixel.Alpha.get(context, n)
               <<r::size(depth), g::size(depth), b::size(depth), a::size(depth)>>
             end
 
