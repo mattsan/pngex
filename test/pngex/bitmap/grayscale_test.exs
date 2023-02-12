@@ -34,7 +34,7 @@ defmodule Pngex.Bitmap.GrayscaleTest do
           data =
             Enum.map(
               0..(context.width * context.height - 1),
-              &TestPixel.get_grayscale(context, &1)
+              &TestPixel.Grayscale.get(context, &1)
             )
 
           actual =
@@ -49,7 +49,7 @@ defmodule Pngex.Bitmap.GrayscaleTest do
         test "binary (#{width}x#{height})", %{depth: depth} = context do
           data =
             for n <- 0..(context.width * context.height - 1), into: <<>> do
-              <<TestPixel.get_grayscale(context, n)::size(depth)>>
+              <<TestPixel.Grayscale.get(context, n)::size(depth)>>
             end
 
           actual =

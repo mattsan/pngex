@@ -33,7 +33,7 @@ defmodule Pngex.Bitmap.GrayscaleDepth16Test do
         test "list of integers (#{width}x#{height})", context do
           data =
             Enum.flat_map(0..(context.width * context.height - 1), fn n ->
-              [TestPixel.get_grayscale(context, n), TestPixel.get_alpha(context, n)]
+              [TestPixel.Grayscale.get(context, n), TestPixel.Alpha.get(context, n)]
             end)
 
           actual =
@@ -48,8 +48,8 @@ defmodule Pngex.Bitmap.GrayscaleDepth16Test do
         test "binary (#{width}x#{height})", %{depth: depth} = context do
           data =
             for n <- 0..(context.width * context.height - 1), into: <<>> do
-              <<TestPixel.get_grayscale(context, n)::size(depth),
-                TestPixel.get_alpha(context, n)::size(depth)>>
+              <<TestPixel.Grayscale.get(context, n)::size(depth),
+                TestPixel.Alpha.get(context, n)::size(depth)>>
             end
 
           actual =
