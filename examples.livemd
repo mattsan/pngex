@@ -1,0 +1,372 @@
+# Examples
+
+```elixir
+Mix.install([
+  :pngex,
+  :kino
+])
+```
+
+## Color Types
+
+### Avaiable formats
+
+See [README's Avaiable formats section](https://hexdocs.pm/pngex/readme.html#avaiable-formats).
+
+### RGB / 8 bits per channel
+
+```elixir
+bitmap =
+  Enum.flat_map(0..65535, fn n ->
+    r = div(n, 256)
+    g = rem(n, 256)
+    b = 255 - max(r, g)
+    [r, g, b]
+  end)
+
+image =
+  Pngex.new()
+  |> Pngex.set_type(:rgb)
+  |> Pngex.set_depth(:depth8)
+  |> Pngex.set_size(256, 256)
+  |> Pngex.generate(bitmap)
+
+image
+|> IO.iodata_to_binary()
+|> Kino.Image.new(:png)
+```
+
+### RGBA / 8 bits per channel
+
+```elixir
+bitmap =
+  Enum.flat_map(0..65535, fn n ->
+    r = div(n, 256)
+    g = rem(n, 256)
+    b = 255 - max(r, g)
+    a = if r + g >= 128 && r + g < 384, do: 255, else: 0
+    [r, g, b, a]
+  end)
+
+image =
+  Pngex.new()
+  |> Pngex.set_type(:rgba)
+  |> Pngex.set_depth(:depth8)
+  |> Pngex.set_size(256, 256)
+  |> Pngex.generate(bitmap)
+
+image
+|> IO.iodata_to_binary()
+|> Kino.Image.new(:png)
+```
+
+### Indexed (Palette) / 8 bits per channel
+
+```elixir
+palette =
+  Enum.map(0..255, fn n ->
+    {n, 255, 255 - n}
+  end)
+
+bitmap =
+  Enum.map(0..65535, fn n ->
+    rem(n, 256)
+  end)
+
+image =
+  Pngex.new()
+  |> Pngex.set_type(:indexed)
+  |> Pngex.set_depth(:depth8)
+  |> Pngex.set_size(256, 256)
+  |> Pngex.set_palette(palette)
+  |> Pngex.generate(bitmap)
+
+image
+|> IO.iodata_to_binary()
+|> Kino.Image.new(:png)
+```
+
+### Indexed (Palette) / 1 bit per channel
+
+```elixir
+palette = [
+  {0, 255, 255},
+  {255, 255, 0}
+]
+
+bitmap =
+  Enum.map(0..65535, fn n ->
+    rem(div(rem(n, 256), 16) + div(n, 4096), 2)
+  end)
+
+image =
+  Pngex.new()
+  |> Pngex.set_type(:indexed)
+  |> Pngex.set_depth(:depth1)
+  |> Pngex.set_size(256, 256)
+  |> Pngex.set_palette(palette)
+  |> Pngex.generate(bitmap)
+
+image
+|> IO.iodata_to_binary()
+|> Kino.Image.new(:png)
+```
+
+### Grayscale / 8 bits per channel
+
+```elixir
+bitmap =
+  Enum.map(0..65535, fn n ->
+    rem(n, 256)
+  end)
+
+image =
+  Pngex.new()
+  |> Pngex.set_type(:gray)
+  |> Pngex.set_depth(:depth8)
+  |> Pngex.set_size(256, 256)
+  |> Pngex.generate(bitmap)
+
+image
+|> IO.iodata_to_binary()
+|> Kino.Image.new(:png)
+```
+
+### Grayscale / 1 bit per channel
+
+```elixir
+bitmap =
+  Enum.map(0..65535, fn n ->
+    rem(div(rem(n, 256), 16) + div(n, 4096), 2)
+  end)
+
+image =
+  Pngex.new()
+  |> Pngex.set_type(:gray)
+  |> Pngex.set_depth(:depth1)
+  |> Pngex.set_size(256, 256)
+  |> Pngex.generate(bitmap)
+
+image
+|> IO.iodata_to_binary()
+|> Kino.Image.new(:png)
+```
+
+### Grayscale and Alpha / 8 bits per channel
+
+```elixir
+bitmap =
+  Enum.flat_map(0..65535, fn n ->
+    x = rem(n, 256)
+    y = div(n, 256)
+    alpha = if x + y >= 128 && x + y < 384, do: 255, else: 0
+    [rem(n, 256), alpha]
+  end)
+
+image =
+  Pngex.new()
+  |> Pngex.set_type(:gray_and_alpha)
+  |> Pngex.set_depth(:depth8)
+  |> Pngex.set_size(256, 256)
+  |> Pngex.generate(bitmap)
+
+image
+|> IO.iodata_to_binary()
+|> Kino.Image.new(:png)
+```
+
+## Bitmap Data
+
+You can use binary, list of integers and list of tuples.
+
+### Binary
+
+| type              | example                                   |
+| ----------------- | ----------------------------------------- |
+| `:rgb`            | `<<r0, g0, b0, r1, g1, b1, ...>>`         |
+| `:rgba`           | `<<r0, g0, b0, a0, r1, g1, b1, a1, ...>>` |
+| `:gray`           | `<<c0, c1, ...>`                          |
+| `:gray_and_alpha` | `<<c0, a0, c1, a1, ...>>`                 |
+| `:indexed`        | `<<c0, c1, ...>`                          |
+
+#### RGB / 8 bits per channel
+
+```elixir
+bitmap =
+  for n <- 0..65535, into: <<>> do
+    r = div(n, 256)
+    g = rem(n, 256)
+    b = 255 - max(r, g)
+    <<r, g, b>>
+  end
+
+image =
+  Pngex.new()
+  |> Pngex.set_type(:rgb)
+  |> Pngex.set_depth(:depth8)
+  |> Pngex.set_size(256, 256)
+  |> Pngex.generate(bitmap)
+
+image
+|> IO.iodata_to_binary()
+|> Kino.Image.new(:png)
+```
+
+#### RGB / 16 bits per channel
+
+```elixir
+bitmap =
+  for n <- 0..65535, into: <<>> do
+    r = div(n, 65536)
+    g = rem(n, 65536)
+    b = 65536 - max(r, g)
+    <<r::16, g::16, b::16>>
+  end
+
+image =
+  Pngex.new()
+  |> Pngex.set_type(:rgb)
+  |> Pngex.set_depth(:depth16)
+  |> Pngex.set_size(256, 256)
+  |> Pngex.generate(bitmap)
+
+image
+|> IO.iodata_to_binary()
+|> Kino.Image.new(:png)
+```
+
+### Indexed (Palette) / 1 bit per channel
+
+```elixir
+palette = [
+  {0, 255, 255},
+  {255, 255, 0}
+]
+
+bitmap =
+  for n <- 0..65535, into: <<>> do
+    pixel = rem(div(rem(n, 256), 16) + div(n, 4096), 2)
+    <<pixel::1>>
+  end
+
+image =
+  Pngex.new()
+  |> Pngex.set_type(:indexed)
+  |> Pngex.set_depth(:depth1)
+  |> Pngex.set_size(256, 256)
+  |> Pngex.set_palette(palette)
+  |> Pngex.generate(bitmap)
+
+image
+|> IO.iodata_to_binary()
+|> Kino.Image.new(:png)
+```
+
+#### Grayscale / 1 bit per channel
+
+```elixir
+bitmap =
+  for n <- 0..65535, into: <<>> do
+    pixel = rem(div(rem(n, 256), 16) + div(n, 4096), 2)
+    <<pixel::1>>
+  end
+
+image =
+  Pngex.new()
+  |> Pngex.set_type(:gray)
+  |> Pngex.set_depth(:depth1)
+  |> Pngex.set_size(256, 256)
+  |> Pngex.generate(bitmap)
+
+image
+|> IO.iodata_to_binary()
+|> Kino.Image.new(:png)
+```
+
+### List of Integers
+
+| type              | example                                 |
+| ----------------- | --------------------------------------- |
+| `:rgb`            | `[r0, g0, b0, r1, g1, b1, ...]`         |
+| `:rgba`           | `[r0, g0, b0, a0, r1, g1, b1, a1, ...]` |
+| `:gray`           | `[c0, c1, ...]`                         |
+| `:gray_and_alpha` | `[c0, a0, c1, a1, ...]`                 |
+| `:indexed`        | `[c0, c1, ...]`                         |
+
+#### RGB / 8 bits per channel
+
+```elixir
+bitmap =
+  for n <- 0..65535 do
+    r = div(n, 256)
+    g = rem(n, 256)
+    b = 255 - max(r, g)
+    [r, g, b]
+  end
+  |> List.flatten()
+
+image =
+  Pngex.new()
+  |> Pngex.set_type(:rgb)
+  |> Pngex.set_depth(:depth8)
+  |> Pngex.set_size(256, 256)
+  |> Pngex.generate(bitmap)
+
+image
+|> IO.iodata_to_binary()
+|> Kino.Image.new(:png)
+```
+
+### List of Tuples
+
+| type    | example                                     |
+| ------- | ------------------------------------------- |
+| `:rgb`  | `[{r0, g0, b0}, {r1, g1, b1}, ...]`         |
+| `:rgba` | `[{r0, g0, b0, a0}, {r1, g1, b1, a1}, ...]` |
+
+#### RGB / 8 bits per channel
+
+```elixir
+bitmap =
+  for n <- 0..65535 do
+    r = div(n, 256)
+    g = rem(n, 256)
+    b = 255 - max(r, g)
+    {r, g, b}
+  end
+
+image =
+  Pngex.new()
+  |> Pngex.set_type(:rgb)
+  |> Pngex.set_depth(:depth8)
+  |> Pngex.set_size(256, 256)
+  |> Pngex.generate(bitmap)
+
+image
+|> IO.iodata_to_binary()
+|> Kino.Image.new(:png)
+```
+
+#### RGBA / 8 bits per channel
+
+```elixir
+bitmap =
+  for n <- 0..65535 do
+    r = div(n, 256)
+    g = rem(n, 256)
+    b = 255 - max(r, g)
+    a = if r + g >= 128 && r + g < 384, do: 255, else: 0
+    {r, g, b, a}
+  end
+
+image =
+  Pngex.new()
+  |> Pngex.set_type(:rgba)
+  |> Pngex.set_depth(:depth8)
+  |> Pngex.set_size(256, 256)
+  |> Pngex.generate(bitmap)
+
+image
+|> IO.iodata_to_binary()
+|> Kino.Image.new(:png)
+```
