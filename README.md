@@ -152,10 +152,10 @@ File.write("gray8_256x256.png", image)
 
 ## Avaiable formats
 
-| type \ depth      | `:depth1` | `:depth2` | `:depth4` | `:depth8` | `:depth16` |
-|-------------------|:---------:|:---------:|:---------:|:---------:|:----------:|
-| `:indexed`        | v         | v         | v         | v         |            |
-| `:gray`           | v         | v         | v         | v         | v          |
-| `:gray_and_alpha` |           |           |           | v         | v          |
-| `:rgb`            |           |           |           | v         | v          |
-| `:rgba`           |           |           |           | v         | v          |
+| color type \ depth | `:depth1` | `:depth2` | `:depth4` | `:depth8` | `:depth16` |
+|--------------------|:---------:|:---------:|:---------:|:---------:|:----------:|
+| `:indexed`         | ✓         | ✓         | ✓         | ✓         |            |
+| `:gray`            | ✓         | ✓         | ✓         | ✓         | ✓          |
+| `:gray_and_alpha`  |           |           |           | ✓         | ✓          |
+| `:rgb`             |           |           |           | ✓         | ✓          |
+| `:rgba`            |           |           |           | ✓         | ✓          |
