@@ -20,7 +20,7 @@ defmodule Pngex.Bitmap do
       <<>> ->
         nil
 
-      <<row::size(row_size), rest::bitstring>> ->
+      <<row::size(^row_size), rest::bitstring>> ->
         {<<pngex.scanline_filter, row::size(row_size), 0::size(padding_size)>>, rest}
 
       row ->
