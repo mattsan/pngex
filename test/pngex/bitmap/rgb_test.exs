@@ -33,7 +33,7 @@ defmodule Pngex.Bitmap.RGBTest do
         test "list of integers (#{width}x#{height})", context do
           data =
             Enum.flat_map(0..(context.width * context.height - 1), fn n ->
-              {r, g, b} = TestPixel.get_rgb(context, n)
+              {r, g, b} = TestPixel.RGB.get(context, n)
               [r, g, b]
             end)
 
@@ -49,7 +49,7 @@ defmodule Pngex.Bitmap.RGBTest do
         test "list of RGB color (#{width}x#{height})", context do
           data =
             Enum.map(0..(context.width * context.height - 1), fn n ->
-              TestPixel.get_rgb(context, n)
+              TestPixel.RGB.get(context, n)
             end)
 
           actual =
@@ -64,7 +64,7 @@ defmodule Pngex.Bitmap.RGBTest do
         test "binary (#{width}x#{height})", %{depth: depth} = context do
           data =
             for n <- 0..(context.width * context.height - 1), into: <<>> do
-              {r, g, b} = TestPixel.get_rgb(context, n)
+              {r, g, b} = TestPixel.RGB.get(context, n)
               <<r::size(depth), g::size(depth), b::size(depth)>>
             end
 

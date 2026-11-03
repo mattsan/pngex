@@ -109,6 +109,6 @@ defmodule Pngex.Bitmap do
 
   @spec padding_size_for_byte_boundary(non_neg_integer()) :: 0..7
   defp padding_size_for_byte_boundary(n) when is_integer(n) and n >= 0 do
-    rem(8 - rem(n, 8), 8)
+    Bitwise.band(-n, 0b0111)
   end
 end

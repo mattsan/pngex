@@ -199,26 +199,26 @@ defmodule Pngex do
   def new(opts \\ []) when is_list(opts) do
     Enum.reduce(opts, %{pngex: %Pngex{}, errors: []}, fn
       {:type, type}, acc when is_color_type(type) ->
-        %{acc | pngex: %{acc.pngex | type: type}}
+        put_in(acc.pngex.type, type)
 
       {:depth, depth}, acc when is_bit_depth(depth) ->
-        %{acc | pngex: %{acc.pngex | depth: depth}}
+        put_in(acc.pngex.depth, depth)
 
       {:width, width}, acc when is_pos_int32(width) ->
-        %{acc | pngex: %{acc.pngex | width: width}}
+        put_in(acc.pngex.width, width)
 
       {:height, height}, acc when is_pos_int32(height) ->
-        %{acc | pngex: %{acc.pngex | height: height}}
+        put_in(acc.pngex.height, height)
 
       {:palette, palette} = item, acc ->
         if is_valid_palette(palette) do
-          %{acc | pngex: %{acc.pngex | palette: palette}}
+          put_in(acc.pngex.palette, palette)
         else
-          %{acc | errors: [item | acc.errors]}
+          update_in(acc.errors, &[item | &1])
         end
 
       error, acc ->
-        %{acc | errors: [error | acc.errors]}
+        update_in(acc.errors, &[error | &1])
     end)
     |> case do
       %{pngex: pngex, errors: []} -> pngex
